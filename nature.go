@@ -9,7 +9,7 @@ import (
 
 type (
 	DeviceDetail struct {
-		Device     nature.Device      `json:"deice"`
+		Device     nature.Device      `json:"device"`
 		Appliances []nature.Appliance `json:"appliances"`
 	}
 
