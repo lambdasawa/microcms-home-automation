@@ -36,7 +36,7 @@ func fetch(ctx context.Context, api *nature.DefaultApiService) (*Nature, error) 
 
 		details = append(details, DeviceDetail{
 			Device:     d,
-			Appliances: appliances,
+			Appliances: as,
 		})
 	}
 
