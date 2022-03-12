@@ -1,0 +1,1412 @@
+openapi: 3.0.1
+info:
+  description: Read/Write Nature Remo
+  title: Nature API
+  version: 1.0.0
+servers:
+- url: https://api.nature.global/
+paths:
+  /1/users/me:
+    get:
+      description: Fetch the authenticated user's information.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: User information
+      security:
+      - oauth2:
+        - basic.read
+    post:
+      description: Update authenticated user's information.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                nickname:
+                  description: |
+                    User's nickname.
+                  type: string
+              required:
+              - nickname
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: Successfully updated nickname
+      security:
+      - oauth2:
+        - basic
+  /1/devices:
+    get:
+      description: Fetch the list of Remo devices the user has access to.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Devices'
+          description: List of Remo devices
+      security:
+      - oauth2:
+        - basic.read
+  /1/detectappliance:
+    post:
+      description: Find the air conditioner best matching the provided infrared signal.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                message:
+                  description: JSON serialized object describing infrared signals.
+                    Includes "data", "freq" and "format" keys.
+                  type: string
+              required:
+              - message
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ApplianceModelAndParam'
+                type: array
+          description: List of air conditioner model and settings. Best match comes
+            first.
+      security:
+      - oauth2:
+        - detectappliance
+  /1/appliances:
+    get:
+      description: Fetch the list of appliances.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Appliance'
+                type: array
+          description: List of appliances
+      security:
+      - oauth2:
+        - basic.read
+    post:
+      description: Create a new appliance.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                nickname:
+                  description: Appliance name
+                  type: string
+                model:
+                  description: ApplianceModel ID if the appliance we're trying to
+                    create is included in IRDB.
+                  type: string
+                model_type:
+                  enum:
+                  - AC
+                  - TV
+                  - LIGHT
+                  type: string
+                device:
+                  description: Device ID
+                  type: string
+                image:
+                  description: |
+                    Basename of the image file included in the app. Ex: "ico_ac_1"
+                  type: string
+              required:
+              - device
+              - image
+              - nickname
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appliance'
+          description: Created an appliance
+      security:
+      - oauth2:
+        - basic
+  /1/appliance_orders:
+    post:
+      description: Reorder appliances.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                appliances:
+                  description: List of all appliances' IDs comma separated
+                  type: string
+              required:
+              - appliances
+        required: true
+      responses:
+        "200":
+          content: {}
+          description: Reordered appliances
+      security:
+      - oauth2:
+        - basic
+  /1/appliances/{appliance}/delete:
+    post:
+      description: Delete appliance.
+      parameters:
+      - description: Appliance ID.
+        in: path
+        name: appliance
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content: {}
+          description: Deleted an appliance
+      security:
+      - oauth2:
+        - basic
+  /1/appliances/{appliance}:
+    post:
+      description: Update appliance.
+      parameters:
+      - description: Appliance ID.
+        in: path
+        name: appliance
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                image:
+                  description: |
+                    Basename of the image file included in the app. Ex: "ico_ac_1"
+                  type: string
+                nickname:
+                  description: Appliance name
+                  type: string
+              required:
+              - image
+              - nickname
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appliance'
+          description: Updated an appliance
+      security:
+      - oauth2:
+        - basic
+  /1/appliances/{appliance}/aircon_settings:
+    post:
+      description: Update air conditioner settings.
+      parameters:
+      - description: Appliance ID.
+        in: path
+        name: appliance
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                temperature:
+                  description: Temperature
+                  type: string
+                operation_mode:
+                  description: AC operation mode
+                  type: string
+                air_volume:
+                  description: AC air volume
+                  type: string
+                air_direction:
+                  description: AC air direction
+                  type: string
+                button:
+                  description: Button
+                  type: string
+      responses:
+        "200":
+          content: {}
+          description: Updated air conditioner settings
+      security:
+      - oauth2:
+        - sendir
+  /1/appliances/{appliance}/tv:
+    post:
+      description: Send tv infrared signal.
+      parameters:
+      - description: Appliance ID.
+        in: path
+        name: appliance
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                button:
+                  description: Button name
+                  type: string
+              required:
+              - button
+        required: true
+      responses:
+        "200":
+          content: {}
+          description: Updated tv state
+      security:
+      - oauth2:
+        - sendir
+  /1/appliances/{appliance}/light:
+    post:
+      description: Send light infrared signal.
+      parameters:
+      - description: Appliance ID.
+        in: path
+        name: appliance
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                button:
+                  description: Button name
+                  type: string
+              required:
+              - button
+        required: true
+      responses:
+        "200":
+          content: {}
+          description: Updated light state
+      security:
+      - oauth2:
+        - sendir
+  /1/appliances/{appliance}/signals:
+    get:
+      description: Fetch signals registered under this appliance.
+      parameters:
+      - description: Appliance ID.
+        in: path
+        name: appliance
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Signal'
+                type: array
+          description: List of signals
+      security:
+      - oauth2:
+        - basic.read
+    post:
+      description: Create a signal under this appliance.
+      parameters:
+      - description: Appliance ID.
+        in: path
+        name: appliance
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                message:
+                  description: JSON serialized object describing infrared signals.
+                    Includes "data", "freq" and "format" keys.
+                  type: string
+                image:
+                  description: |
+                    Basename of the image file included in the app. Ex: "ico_io"
+                  type: string
+                name:
+                  description: Signal name
+                  type: string
+              required:
+              - image
+              - message
+              - name
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Signal'
+          description: Created signal
+      security:
+      - oauth2:
+        - basic
+  /1/appliances/{appliance}/signal_orders:
+    post:
+      description: Reorder signals under this appliance.
+      parameters:
+      - description: Appliance ID.
+        in: path
+        name: appliance
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                signals:
+                  description: List of all signals' IDs comma separated
+                  type: string
+              required:
+              - signals
+        required: true
+      responses:
+        "200":
+          content: {}
+          description: Reordered signals
+      security:
+      - oauth2:
+        - basic
+  /1/signals/{signal}:
+    post:
+      description: Update infrared signal.
+      parameters:
+      - description: Signal ID.
+        in: path
+        name: signal
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                image:
+                  description: |
+                    Basename of the image file included in the app. Ex: "ico_io"
+                  type: string
+                name:
+                  description: Signal name
+                  type: string
+              required:
+              - image
+              - name
+        required: true
+      responses:
+        "200":
+          content: {}
+          description: Updated infrared signal
+      security:
+      - oauth2:
+        - basic
+  /1/signals/{signal}/delete:
+    post:
+      description: Delete an infrared signal.
+      parameters:
+      - description: Signal ID.
+        in: path
+        name: signal
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content: {}
+          description: Deleted a signal
+      security:
+      - oauth2:
+        - basic
+  /1/signals/{signal}/send:
+    post:
+      description: Send infrared signal.
+      parameters:
+      - description: Signal ID.
+        in: path
+        name: signal
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content: {}
+          description: Successfully sent infrared signal
+      security:
+      - oauth2:
+        - sendir
+  /1/devices/{device}:
+    post:
+      description: Update Remo
+      parameters:
+      - description: Device ID.
+        in: path
+        name: device
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                name:
+                  description: Signal name
+                  type: string
+              required:
+              - name
+        required: true
+      responses:
+        "200":
+          content: {}
+          description: Updated Remo
+      security:
+      - oauth2:
+        - basic
+  /1/devices/{device}/delete:
+    post:
+      description: Delete Remo.
+      parameters:
+      - description: Device ID.
+        in: path
+        name: device
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content: {}
+          description: Deleted Remo
+      security:
+      - oauth2:
+        - basic
+  /1/devices/{device}/temperature_offset:
+    post:
+      description: Update temperature offset.
+      parameters:
+      - description: Device ID.
+        in: path
+        name: device
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                offset:
+                  description: Temperature offset value added to the measured temperature.
+                  format: int32
+                  type: integer
+              required:
+              - offset
+        required: true
+      responses:
+        "200":
+          content: {}
+          description: Updated
+      security:
+      - oauth2:
+        - basic
+  /1/devices/{device}/humidity_offset:
+    post:
+      description: Update humidity offset.
+      parameters:
+      - description: Device ID.
+        in: path
+        name: device
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                offset:
+                  description: Humidity offset value added to the measured humidity.
+                  format: int32
+                  type: integer
+              required:
+              - offset
+        required: true
+      responses:
+        "200":
+          content: {}
+          description: Updated
+      security:
+      - oauth2:
+        - basic
+components:
+  parameters:
+    device:
+      description: Device ID.
+      in: path
+      name: device
+      required: true
+      schema:
+        type: string
+    appliance:
+      description: Appliance ID.
+      in: path
+      name: appliance
+      required: true
+      schema:
+        type: string
+    signal:
+      description: Signal ID.
+      in: path
+      name: signal
+      required: true
+      schema:
+        type: string
+  schemas:
+    formData_applianceImage:
+      description: |
+        Basename of the image file included in the app. Ex: "ico_ac_1"
+      type: string
+    formData_signalImage:
+      description: |
+        Basename of the image file included in the app. Ex: "ico_io"
+      type: string
+    formData_irsignal:
+      description: JSON serialized object describing infrared signals. Includes "data",
+        "freq" and "format" keys.
+      example: |
+        {\"freq\":38,\"data\":[2523,2717,786,903,777,924,763,1964,768,1958,769,1955,772,1953,773,914,770,902,786,54147,2523,2721,782,920,761,924,773,1936,779,1948,784,1957,768,1942,784,921,758,924,772],\"format\":\"us\"}
+      type: string
+    User:
+      example:
+        nickname: nickname
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          type: string
+        nickname:
+          type: string
+      type: object
+    Devices:
+      items:
+        $ref: '#/components/schemas/Device'
+      type: array
+    Device:
+      example:
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        temperature_offset: 0.8008281904610115
+        mac_address: mac_address
+        name: name
+        created_at: 2000-01-23T04:56:07.000+00:00
+        serial_number: serial_number
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        humidity_offset: 6.027456183070403
+        firmware_version: firmware_version
+        newest_events:
+          te:
+            val: 0
+            created_at: 2020-09-10T06:03:58.213Z
+          hu:
+            val: 0
+            created_at: 2020-09-10T06:03:58.213Z
+          il:
+            val: 0
+            created_at: 2020-09-10T06:03:58.213Z
+          mo:
+            val: 1
+            created_at: 2020-09-10T06:03:58.213Z
+      properties:
+        id:
+          format: uuid
+          type: string
+        name:
+          type: string
+        temperature_offset:
+          type: number
+        humidity_offset:
+          type: number
+        created_at:
+          format: date-time
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+        firmware_version:
+          type: string
+        mac_address:
+          type: string
+        serial_number:
+          type: string
+        newest_events:
+          $ref: '#/components/schemas/Device_newest_events'
+      type: object
+    DeviceCore:
+      example:
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        temperature_offset: 0.8008281904610115
+        mac_address: mac_address
+        name: name
+        created_at: 2000-01-23T04:56:07.000+00:00
+        serial_number: serial_number
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        humidity_offset: 6.027456183070403
+        firmware_version: firmware_version
+      properties:
+        id:
+          format: uuid
+          type: string
+        name:
+          type: string
+        temperature_offset:
+          type: number
+        humidity_offset:
+          type: number
+        created_at:
+          format: date-time
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+        firmware_version:
+          type: string
+        mac_address:
+          type: string
+        serial_number:
+          type: string
+      type: object
+    Appliance:
+      example:
+        image: image
+        settings:
+          temp: temp
+        tv:
+          buttons:
+          - image: image
+            name: name
+            label: label
+          - image: image
+            name: name
+            label: label
+          state:
+            input: t
+        signals:
+        - image: image
+          name: name
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - image: image
+          name: name
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        light:
+          buttons:
+          - image: image
+            name: name
+            label: label
+          - image: image
+            name: name
+            label: label
+          state:
+            brightness: brightness
+            power: "on"
+            last_button: last_button
+        smart_meter:
+          echonetlite_properties:
+          - val: val
+            updated_at: 2000-01-23T04:56:07.000+00:00
+            name: name
+            epc: 1
+          - val: val
+            updated_at: 2000-01-23T04:56:07.000+00:00
+            name: name
+            epc: 1
+        nickname: nickname
+        model:
+          image: image
+          remote_name: remote_name
+          name: name
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          manufacturer: manufacturer
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        aircon:
+          tempUnit: ""
+          range:
+            modes:
+              warm:
+                temp:
+                - null
+                - null
+                vol:
+                - null
+                - null
+                dir:
+                - null
+                - null
+              auto:
+                temp:
+                - null
+                - null
+                vol:
+                - null
+                - null
+                dir:
+                - null
+                - null
+              cool:
+                temp:
+                - null
+                - null
+                vol:
+                - null
+                - null
+                dir:
+                - null
+                - null
+              dry:
+                temp:
+                - null
+                - null
+                vol:
+                - null
+                - null
+                dir:
+                - null
+                - null
+              blow:
+                temp:
+                - null
+                - null
+                vol:
+                - null
+                - null
+                dir:
+                - null
+                - null
+            fixedButtons:
+            - null
+            - null
+        device:
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          temperature_offset: 0.8008281904610115
+          mac_address: mac_address
+          name: name
+          created_at: 2000-01-23T04:56:07.000+00:00
+          serial_number: serial_number
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          humidity_offset: 6.027456183070403
+          firmware_version: firmware_version
+      properties:
+        id:
+          format: uuid
+          type: string
+        device:
+          $ref: '#/components/schemas/DeviceCore'
+        model:
+          $ref: '#/components/schemas/ApplianceModel'
+        nickname:
+          type: string
+        image:
+          description: |
+            Basename of the image file included in the app. Ex: "ico_ac_1"
+          type: string
+        type:
+          $ref: '#/components/schemas/ApplianceType'
+        settings:
+          $ref: '#/components/schemas/AirConParams'
+        aircon:
+          $ref: '#/components/schemas/AirCon'
+        signals:
+          items:
+            $ref: '#/components/schemas/Signal'
+          type: array
+        tv:
+          $ref: '#/components/schemas/TV'
+        light:
+          $ref: '#/components/schemas/LIGHT'
+        smart_meter:
+          $ref: '#/components/schemas/SmartMeter'
+      type: object
+    AirConParams:
+      example:
+        temp: temp
+      properties:
+        temp:
+          description: The temperature in string format. The unit is described in
+            Aircon object. The range of Temperatures which the air conditioner accepts
+            depends on the air conditioner model and operation mode. Check the 'AirConRangeMode'
+            information in the response for the range of the particular air conditioner
+            model and operation mode.
+          type: string
+          x-example:
+          - ""
+          - "0"
+          - "38"
+          - "80"
+        mode:
+          $ref: '#/components/schemas/OperationMode'
+        vol:
+          $ref: '#/components/schemas/AirVolume'
+        dir:
+          $ref: '#/components/schemas/AirDirection'
+        button:
+          $ref: '#/components/schemas/ACButton'
+      type: object
+    AirCon:
+      example:
+        tempUnit: ""
+        range:
+          modes:
+            warm:
+              temp:
+              - null
+              - null
+              vol:
+              - null
+              - null
+              dir:
+              - null
+              - null
+            auto:
+              temp:
+              - null
+              - null
+              vol:
+              - null
+              - null
+              dir:
+              - null
+              - null
+            cool:
+              temp:
+              - null
+              - null
+              vol:
+              - null
+              - null
+              dir:
+              - null
+              - null
+            dry:
+              temp:
+              - null
+              - null
+              vol:
+              - null
+              - null
+              dir:
+              - null
+              - null
+            blow:
+              temp:
+              - null
+              - null
+              vol:
+              - null
+              - null
+              dir:
+              - null
+              - null
+          fixedButtons:
+          - null
+          - null
+      properties:
+        range:
+          $ref: '#/components/schemas/AirCon_range'
+        tempUnit:
+          enum:
+          - ""
+          - c
+          - f
+          type: string
+      type: object
+    AirConRangeMode:
+      example:
+        temp:
+        - null
+        - null
+        vol:
+        - null
+        - null
+        dir:
+        - null
+        - null
+      properties:
+        temp:
+          items:
+            $ref: '#/components/schemas/Temperature'
+          type: array
+        vol:
+          items:
+            $ref: '#/components/schemas/AirVolume'
+          type: array
+        dir:
+          items:
+            $ref: '#/components/schemas/AirDirection'
+          type: array
+      type: object
+    Signal:
+      example:
+        image: image
+        name: name
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          type: string
+        name:
+          type: string
+        image:
+          description: |
+            Basename of the image file included in the app. Ex: "ico_ac_1"
+          type: string
+      type: object
+    ApplianceModel:
+      example:
+        image: image
+        remote_name: remote_name
+        name: name
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        manufacturer: manufacturer
+      properties:
+        id:
+          format: uuid
+          type: string
+        manufacturer:
+          type: string
+        remote_name:
+          type: string
+        name:
+          type: string
+        image:
+          description: |
+            Basename of the image file included in the app. Ex: "ico_ac_1"
+          type: string
+      type: object
+    ApplianceModelAndParam:
+      example:
+        model:
+          image: image
+          remote_name: remote_name
+          name: name
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          manufacturer: manufacturer
+        params:
+          temp: temp
+      properties:
+        model:
+          $ref: '#/components/schemas/ApplianceModel'
+        params:
+          $ref: '#/components/schemas/AirConParams'
+      type: object
+    ApplianceType:
+      default: AC
+      description: Type of the appliance. "AC" (Air conditioner), "TV" and "LIGHT"
+        are 1st class citizen appliance, which is included in our IRDB (InfraRed signals
+        DataBase). The "ApplianceModel" stores meta data about the appliance. We provide
+        AC specific UI. Everything else is "IR". We just learn the signals from the
+        remote and store them, and when users tap the button on the smartphone app,
+        our server sends it through Remo.
+      enum:
+      - AC
+      - TV
+      - LIGHT
+      - IR
+      type: string
+    Id:
+      format: uuid
+      type: string
+    Image:
+      description: |
+        Basename of the image file included in the app. Ex: "ico_ac_1"
+      type: string
+    DateTime:
+      format: date-time
+      type: string
+    OperationMode:
+      description: The range of OperationModes which the air conditioner accepts depends
+        on the air conditioner model. Check the 'AirConRangeMode' information in the
+        response for the range of the particular air conditioner model.
+      enum:
+      - ""
+      - cool
+      - warm
+      - dry
+      - blow
+      - auto
+      type: string
+    Temperature:
+      description: The temperature in string format. The unit is described in Aircon
+        object. The range of Temperatures which the air conditioner accepts depends
+        on the air conditioner model and operation mode. Check the 'AirConRangeMode'
+        information in the response for the range of the particular air conditioner
+        model and operation mode.
+      type: string
+      x-example:
+      - ""
+      - "0"
+      - "38"
+      - "80"
+    AirVolume:
+      description: Empty means automatic. Numbers express the amount of volume. The
+        range of AirVolumes which the air conditioner accepts depends on the air conditioner
+        model and operation mode. Check the 'AirConRangeMode' information in the response
+        for the range of the particular air conditioner model and operation mode.
+      enum:
+      - ""
+      - auto
+      - "1"
+      - "2"
+      - "3"
+      - "4"
+      - "5"
+      - "6"
+      - "7"
+      - "8"
+      - "9"
+      - "10"
+      type: string
+    AirDirection:
+      description: Empty means automatic.
+      enum:
+      - ""
+      - auto
+      - swing
+      type: string
+    ACButton:
+      description: Specify "power-off" always if you want the air conditioner powered
+        off. Empty means powered on.
+      enum:
+      - ""
+      - power-off
+      type: string
+    SensorValue:
+      description: |
+        The reference key to SensorValue means "te" = temperature, "hu" = humidity, "il" = illumination, "mo" = movement.
+        The val of "mo" is always 1 and when movement event is captured created_at is updated.
+      properties:
+        val:
+          format: float
+          type: number
+        created_at:
+          format: date-time
+          type: string
+      type: object
+    TV:
+      example:
+        buttons:
+        - image: image
+          name: name
+          label: label
+        - image: image
+          name: name
+          label: label
+        state:
+          input: t
+      properties:
+        state:
+          $ref: '#/components/schemas/TVState'
+        buttons:
+          items:
+            $ref: '#/components/schemas/Button'
+          type: array
+      type: object
+    LIGHT:
+      example:
+        buttons:
+        - image: image
+          name: name
+          label: label
+        - image: image
+          name: name
+          label: label
+        state:
+          brightness: brightness
+          power: "on"
+          last_button: last_button
+      properties:
+        state:
+          $ref: '#/components/schemas/LIGHTState'
+        buttons:
+          items:
+            $ref: '#/components/schemas/Button'
+          type: array
+      type: object
+    Button:
+      example:
+        image: image
+        name: name
+        label: label
+      properties:
+        name:
+          description: Name of button. It is used for "POST /1/{applaince}/tv" and
+            "POST /1/{appliance}/light".
+          type: string
+        image:
+          description: |
+            Basename of the image file included in the app. Ex: "ico_ac_1"
+          type: string
+        label:
+          description: Label of button.
+          type: string
+      type: object
+    TVState:
+      example:
+        input: t
+      properties:
+        input:
+          enum:
+          - t
+          - bs
+          - cs
+          type: string
+      type: object
+    LIGHTState:
+      example:
+        brightness: brightness
+        power: "on"
+        last_button: last_button
+      properties:
+        brightness:
+          type: string
+        power:
+          enum:
+          - "on"
+          - "off"
+          type: string
+        last_button:
+          type: string
+      type: object
+    SmartMeter:
+      example:
+        echonetlite_properties:
+        - val: val
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          name: name
+          epc: 1
+        - val: val
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          name: name
+          epc: 1
+      properties:
+        echonetlite_properties:
+          items:
+            $ref: '#/components/schemas/EchonetLiteProperty'
+          type: array
+      type: object
+    EchonetLiteProperty:
+      description: |
+        The ECHONET lite properties fetched from the appliance.
+        See "Detailed Requirements for ECHONET Device Objects" for more details.
+        ref. https://echonet.jp/spec_object_rl_en/
+      example:
+        val: val
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        name: name
+        epc: 1
+      properties:
+        name:
+          type: string
+        epc:
+          description: ECHONET Property
+          type: integer
+        val:
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+      type: object
+    Device_newest_events:
+      example:
+        te:
+          val: 0
+          created_at: 2020-09-10T06:03:58.213Z
+        hu:
+          val: 0
+          created_at: 2020-09-10T06:03:58.213Z
+        il:
+          val: 0
+          created_at: 2020-09-10T06:03:58.213Z
+        mo:
+          val: 1
+          created_at: 2020-09-10T06:03:58.213Z
+      properties:
+        te:
+          $ref: '#/components/schemas/SensorValue'
+        hu:
+          $ref: '#/components/schemas/SensorValue'
+        il:
+          $ref: '#/components/schemas/SensorValue'
+        mo:
+          $ref: '#/components/schemas/SensorValue'
+      type: object
+    AirCon_range_modes:
+      example:
+        warm:
+          temp:
+          - null
+          - null
+          vol:
+          - null
+          - null
+          dir:
+          - null
+          - null
+        auto:
+          temp:
+          - null
+          - null
+          vol:
+          - null
+          - null
+          dir:
+          - null
+          - null
+        cool:
+          temp:
+          - null
+          - null
+          vol:
+          - null
+          - null
+          dir:
+          - null
+          - null
+        dry:
+          temp:
+          - null
+          - null
+          vol:
+          - null
+          - null
+          dir:
+          - null
+          - null
+        blow:
+          temp:
+          - null
+          - null
+          vol:
+          - null
+          - null
+          dir:
+          - null
+          - null
+      properties:
+        cool:
+          $ref: '#/components/schemas/AirConRangeMode'
+        warm:
+          $ref: '#/components/schemas/AirConRangeMode'
+        dry:
+          $ref: '#/components/schemas/AirConRangeMode'
+        blow:
+          $ref: '#/components/schemas/AirConRangeMode'
+        auto:
+          $ref: '#/components/schemas/AirConRangeMode'
+      type: object
+    AirCon_range:
+      example:
+        modes:
+          warm:
+            temp:
+            - null
+            - null
+            vol:
+            - null
+            - null
+            dir:
+            - null
+            - null
+          auto:
+            temp:
+            - null
+            - null
+            vol:
+            - null
+            - null
+            dir:
+            - null
+            - null
+          cool:
+            temp:
+            - null
+            - null
+            vol:
+            - null
+            - null
+            dir:
+            - null
+            - null
+          dry:
+            temp:
+            - null
+            - null
+            vol:
+            - null
+            - null
+            dir:
+            - null
+            - null
+          blow:
+            temp:
+            - null
+            - null
+            vol:
+            - null
+            - null
+            dir:
+            - null
+            - null
+        fixedButtons:
+        - null
+        - null
+      properties:
+        modes:
+          $ref: '#/components/schemas/AirCon_range_modes'
+        fixedButtons:
+          items:
+            $ref: '#/components/schemas/ACButton'
+          type: array
+      type: object
+  securitySchemes:
+    oauth2:
+      flows:
+        authorizationCode:
+          authorizationUrl: https://api.nature.global/oauth2/auth
+          scopes:
+            basic.read: Read only access to user's profile (excluding email), Remos,
+              appliances, signals.
+            basic: Read + write access to user's profile (excluding email), Remos,
+              appliances, signals.
+            sendir: Send infrared signals through Remo.
+            detectappliance: Detect air conditioner model from infrared signals.
+          tokenUrl: https://api.nature.global/oauth2/token
+      type: oauth2
+x-original-swagger-version: "2.0"
