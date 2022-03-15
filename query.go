@@ -29,7 +29,7 @@ func fetch(ctx context.Context, api *nature.DefaultApiService) (*Nature, error) 
 		as := []nature.Appliance{}
 
 		for _, a := range appliances {
-			if d.Id == a.Device.Id {
+			if *d.Id == *a.Device.Id {
 				as = append(as, a)
 			}
 		}
