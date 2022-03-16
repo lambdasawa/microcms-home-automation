@@ -45,3 +45,7 @@ memory: 2048
 #   test:
 #     variables:
 #       LOG_LEVEL: debug        # Log level for the "test" environment.
+
+secrets:
+  NATURE_ACCESS_TOKEN: /copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/NATURE_ACCESS_TOKEN
+  MICROCMS_WEBHOOK_SECRET: /copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/MICROCMS_WEBHOOK_SECRET
