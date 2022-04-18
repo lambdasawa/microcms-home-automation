@@ -1,0 +1,15 @@
+frameworkVersion: "3"
+
+service: microcms-home-automation
+
+provider:
+  name: aws
+  runtime: go1.x
+  environment:
+    NATURE_ACCESS_TOKEN: ${env:NATURE_ACCESS_TOKEN}
+    MICROCMS_WEBHOOK_SECRET: ${env:MICROCMS_WEBHOOK_SECRET}
+
+functions:
+  main:
+    handler: main
+    url: true

@@ -6,6 +6,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
 )
 
 func main() {
@@ -45,5 +49,9 @@ func main() {
 		fmt.Fprintf(w, "OK")
 	})
 
-	log.Fatal(http.ListenAndServe(":8888", nil))
+	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") == "" {
+		log.Fatal(http.ListenAndServe(":8888", nil))
+	} else {
+		lambda.Start(httpadapter.New(http.DefaultServeMux).ProxyWithContext)
+	}
 }

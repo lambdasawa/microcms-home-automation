@@ -1,0 +1,4 @@
+setup:
+  project: 
+  environment: dev
+  config: dev
